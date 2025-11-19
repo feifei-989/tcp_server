@@ -133,11 +133,12 @@ void Server::heartbeatCheckLoop() {
         auto sessions = sessionMgr_->getAuthenticatedSessions();
         auto timedOutFds = heartbeatMgr_->checkTimeouts(sessions);
 
-        // Remove timed out sessions
+        // Close timed out connections
+        // This will trigger EpollServer to close socket, remove from epoll,
+        // and call onDisconnect callback which removes from sessionMgr
         for (int fd : timedOutFds) {
-            std::cout << "Removing timed out session, fd=" << fd << std::endl;
-            sessionMgr_->removeSession(fd);
-            // Note: The actual socket close will happen in EpollServer
+            std::cout << "Heartbeat timeout, closing connection fd=" << fd << std::endl;
+            epollServer_->closeConnection(fd);
         }
     }
 }

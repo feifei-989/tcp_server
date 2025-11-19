@@ -38,6 +38,9 @@ public:
     // Run one iteration of event loop
     void runOnce(int timeoutMs = 100);
 
+    // Close a client connection (can be called from upper layer)
+    void closeConnection(int fd);
+
 private:
     bool createListenSocket();
     bool setNonBlocking(int fd);

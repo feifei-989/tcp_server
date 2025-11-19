@@ -13,9 +13,7 @@ Session::Session(int fd)
 }
 
 Session::~Session() {
-    if (fd_ >= 0) {
-        close(fd_);
-    }
+    // Note: fd_ is managed by EpollServer, not closed here
 }
 
 bool Session::send(const char* data, size_t len) {

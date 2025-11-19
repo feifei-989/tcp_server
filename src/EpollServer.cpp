@@ -262,16 +262,36 @@ void EpollServer::handleClientData(int fd) {
     }
 }
 
+void EpollServer::closeConnection(int fd) {
+    if (!running_) {
+        return;
+    }
+
+    auto it = sessions_.find(fd);
+    if (it == sessions_.end()) {
+        return;
+    }
+
+    std::cout << "Closing connection, fd=" << fd << std::endl;
+    handleClientDisconnect(fd);
+}
+
 void EpollServer::handleClientDisconnect(int fd) {
     std::cout << "Client disconnected, fd=" << fd << std::endl;
 
+    // Remove from epoll
     epoll_ctl(epollFd_, EPOLL_CTL_DEL, fd, nullptr);
     
+    // Close the socket
+    close(fd);
+
+    // Remove from sessions map
     auto it = sessions_.find(fd);
     if (it != sessions_.end()) {
         sessions_.erase(it);
     }
 
+    // Notify upper layer
     if (disconnectCb_) {
         disconnectCb_(fd);
     }
