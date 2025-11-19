@@ -89,6 +89,10 @@ bool Server::sendToClient(int fd, const MessageHeader& header, const char* body)
     return sessionMgr_->sendToClient(fd, header, body);
 }
 
+bool Server::sendToUser(const std::string& username, const MessageHeader& header, const char* body) {
+    return sessionMgr_->sendToUser(username, header, body);
+}
+
 size_t Server::getSessionCount() const {
     return sessionMgr_->getSessionCount();
 }

@@ -28,8 +28,11 @@ public:
     // Broadcast message to all authenticated clients
     void broadcast(const MessageHeader& header, const char* body = nullptr);
 
-    // Send message to specific client
+    // Send message to specific client by fd
     bool sendToClient(int fd, const MessageHeader& header, const char* body = nullptr);
+
+    // Send message to specific user by username
+    bool sendToUser(const std::string& username, const MessageHeader& header, const char* body = nullptr);
 
     // Get session count
     size_t getSessionCount() const;

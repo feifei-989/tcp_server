@@ -12,7 +12,7 @@
 - ✅ **身份验证**: 客户端需要登录后才能正常通信
 - ✅ **心跳机制**: 10秒超时检测，自动清理失联客户端
 - ✅ **消息广播**: 支持向所有已登录用户发送消息
-- ✅ **单播消息**: 支持向指定用户发送消息
+- ✅ **单播消息**: 支持向指定用户发送消息（通过 fd 或用户名）
 - ✅ **智能指针管理**: 所有对象使用智能指针自动管理内存
 - ✅ **单一职责**: 每个类职责明确，通过组合方式实现功能
 - ✅ **异常处理**: 线程池任务执行包含完整的异常捕获和处理
@@ -239,6 +239,59 @@ Server running, press Ctrl+C to stop
    header.totalLength = sizeof(MessageHeader) + data.size();
    // 发送 header + data
    ```
+
+### 服务器 API 使用
+
+服务器提供了多种消息发送接口：
+
+#### 1. 广播消息（发送给所有已登录用户）
+
+```cpp
+MessageHeader header;
+header.type = static_cast<uint16_t>(MessageType::BROADCAST);
+std::string message = "Server announcement";
+header.bodyLength = message.size();
+header.totalLength = sizeof(MessageHeader) + message.size();
+
+server.broadcast(header, message.c_str());
+```
+
+#### 2. 发送给指定用户（通过 fd）
+
+```cpp
+int clientFd = 10;  // 客户端的文件描述符
+
+MessageHeader header;
+header.type = static_cast<uint16_t>(MessageType::DATA);
+std::string message = "Hello client";
+header.bodyLength = message.size();
+header.totalLength = sizeof(MessageHeader) + message.size();
+
+server.sendToClient(clientFd, header, message.c_str());
+```
+
+#### 3. 发送给指定用户（通过用户名）
+
+```cpp
+std::string username = "alice";  // 目标用户名
+
+MessageHeader header;
+header.type = static_cast<uint16_t>(MessageType::DATA);
+std::string message = "Hello Alice";
+header.bodyLength = message.size();
+header.totalLength = sizeof(MessageHeader) + message.size();
+
+if (server.sendToUser(username, header, message.c_str())) {
+    std::cout << "Message sent to " << username << std::endl;
+} else {
+    std::cerr << "User " << username << " not found or not logged in" << std::endl;
+}
+```
+
+**注意事项:**
+- 只能向已登录（已认证）的用户发送消息
+- 用户名查找是线程安全的
+- 如果用户不存在或未登录，`sendToUser()` 返回 `false`
 
 ## 关键特性说明
 

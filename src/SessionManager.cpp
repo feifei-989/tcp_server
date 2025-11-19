@@ -69,6 +69,33 @@ bool SessionManager::sendToClient(int fd, const MessageHeader& header, const cha
     return session->sendMessage(header, body);
 }
 
+bool SessionManager::sendToUser(const std::string& username, const MessageHeader& header, const char* body) {
+    auto session = getSessionByUsername(username);
+    if (!session) {
+        std::cerr << "User not found: " << username << std::endl;
+        return false;
+    }
+
+    if (!session->isAuthenticated()) {
+        std::cerr << "User not authenticated: " << username << std::endl;
+        return false;
+    }
+
+    std::cout << "Sending message to user: " << username << ", fd=" << session->getFd() << std::endl;
+    return session->sendMessage(header, body);
+}
+
+SessionPtr SessionManager::getSessionByUsername(const std::string& username) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (const auto& pair : sessions_) {
+        if (pair.second->isAuthenticated() && 
+            pair.second->getUsername() == username) {
+            return pair.second;
+        }
+    }
+    return nullptr;
+}
+
 size_t SessionManager::getSessionCount() const {
     std::lock_guard<std::mutex> lock(mutex_);
     return sessions_.size();
